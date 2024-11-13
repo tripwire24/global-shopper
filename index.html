@@ -4,92 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Shopper</title>
-    <meta name="description" content="Currency converter and shopping companion app">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
     <meta name="theme-color" content="#4F46E5">
-
-    <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="icon" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
-
-    <!-- React and Babel -->
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div id="root" class="max-w-screen-md mx-auto py-10"></div>
+    <footer class="text-center text-xs text-gray-600 mt-10">
+        © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
+    </footer>
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
-    <div id="root" class="flex flex-col min-h-screen"></div>
-
-    <!-- Install prompt -->
-    <div id="installPrompt" class="install-banner fixed bottom-0 left-0 right-0 p-4 hidden">
-        <div class="max-w-md mx-auto flex items-center justify-between px-4">
-            <div class="flex-1">
-                <h3 class="text-lg font-semibold text-white">Install App</h3>
-                <p class="text-sm text-indigo-100">Add to your home screen for quick access</p>
-            </div>
-            <div class="flex items-center gap-3 ml-4">
-                <button id="installDecline" class="text-sm text-indigo-100 hover:text-white">Not now</button>
-                <button id="installAccept" class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50">
-                    Install
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <footer class="text-center text-sm text-gray-600 py-4">
-        © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
-    </footer>
-
-    <!-- App Script -->
     <script type="text/babel" src="app.js"></script>
-
-    <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(error => {
-                        console.log('ServiceWorker registration failed:', error);
-                    });
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registered with scope:', registration.scope);
+                }).catch(error => {
+                    console.error('ServiceWorker registration failed:', error);
+                });
             });
         }
-
-        // Install prompt handling
-        let deferredPrompt;
-        const installPrompt = document.getElementById('installPrompt');
-        const installAccept = document.getElementById('installAccept');
-        const installDecline = document.getElementById('installDecline');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installPrompt.classList.remove('hidden');
-        });
-
-        installAccept.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                installPrompt.classList.add('hidden');
-            }
-        });
-
-        installDecline.addEventListener('click', () => {
-            installPrompt.classList.add('hidden');
-        });
-
-        window.addEventListener('appinstalled', () => {
-            installPrompt.classList.add('hidden');
-            deferredPrompt = null;
-        });
     </script>
 </body>
 </html>
