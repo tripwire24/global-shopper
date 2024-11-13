@@ -1,6 +1,6 @@
 {
-  "name": "Shopperex - Global Currency Converter",
-  "short_name": "Shopperex",
+  "name": "The Global Shopper - Currency Converter",
+  "short_name": "Global Shopper",
   "description": "Instant currency conversion for smarter shopping worldwide",
   "start_url": "./",
   "scope": "/",
