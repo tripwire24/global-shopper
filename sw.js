@@ -1,6 +1,6 @@
-const CACHE_NAME = 'shopperex-v1';
-const STATIC_CACHE = 'static-cache-v1';
-const DYNAMIC_CACHE = 'dynamic-cache-v1';
+const CACHE_NAME = 'global-shopper-v1';
+const STATIC_CACHE = 'global-shopper-static-v1';
+const DYNAMIC_CACHE = 'global-shopper-dynamic-v1';
 
 const STATIC_ASSETS = [
     './',
@@ -12,7 +12,8 @@ const STATIC_ASSETS = [
     'https://unpkg.com/react@17/umd/react.development.js',
     'https://unpkg.com/react-dom@17/umd/react-dom.development.js',
     'https://unpkg.com/@babel/standalone/babel.min.js',
-    'https://cdn.tailwindcss.com'
+    'https://cdn.tailwindcss.com',
+    'https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'
 ];
 
 // Install Event
