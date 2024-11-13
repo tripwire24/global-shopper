@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#4f46e5">
-    <meta name="description" content="Convert Philippine Peso to New Zealand Dollar with real-time rates">
+    <meta name="description" content="The Global Shopper - Your worldwide currency converter and shopping companion">
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="PHP-NZD">
+    <meta name="apple-mobile-web-app-title" content="Global Shopper">
     
-    <title>PGlobal Shopper</title>
+    <title>The Global Shopper</title>
     
     <!-- Manifest Link -->
     <link rel="manifest" href="manifest.json">
@@ -20,7 +20,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     
-    <!-- Your existing style imports -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -33,19 +33,10 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-    <!-- Debug Install Button - Now more subtle -->
-    <button 
-        id="debugInstall" 
-        class="fixed top-4 right-4 z-50 px-3 py-2 bg-indigo-600 bg-opacity-80 text-white text-sm rounded-lg shadow-lg"
-        onclick="debugInstall()"
-    >
-        Install App
-    </button>
-
     <!-- Main content -->
     <div id="root" class="flex-grow"></div>
     
-    <!-- Install Prompt UI - Improved styling -->
+    <!-- Install Prompt UI -->
     <div id="installPrompt" class="install-banner fixed bottom-0 left-0 right-0 p-4 hidden">
         <div class="max-w-md mx-auto flex items-center justify-between px-4">
             <div class="flex-1">
@@ -70,12 +61,13 @@
         </div>
     </footer>
 
-    <!-- Your existing script imports -->
+    <!-- React and Dependencies -->
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
 
+    <!-- PWA Install Script -->
     <script>
     let deferredPrompt;
 
@@ -86,28 +78,6 @@
         console.log('Install prompt stored');
         document.getElementById('installPrompt').classList.remove('hidden');
     });
-
-    function debugInstall() {
-        console.log('Debug install clicked');
-        console.log('Deferred prompt available:', !!deferredPrompt);
-        
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                console.log('User choice:', choiceResult.outcome);
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the install prompt');
-                }
-                deferredPrompt = null;
-            });
-        } else {
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                alert('App is already installed!');
-            } else {
-                alert('Install prompt not available yet. Please try:\n1. Clear browser data\n2. Wait a few minutes\n3. Refresh page');
-            }
-        }
-    }
 
     // Handle Install Button Click
     document.getElementById('installButton').addEventListener('click', async () => {
@@ -131,7 +101,7 @@
         }
     });
 
-    // Service Worker Registration with logging
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -145,7 +115,7 @@
     }
     </script>
 
-    <!-- Your app script -->
+    <!-- App Script -->
     <script type="text/babel" src="app.js"></script>
 </body>
 </html>
