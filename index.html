@@ -3,32 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Shopper</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+    <title>Global Shopper - Currency Converter & Shopping Assistant</title>
+    <meta name="description" content="Global Shopper - Your international shopping companion with currency conversion and shopping history tracking">
+    
+    <!-- Relative paths for GitHub Pages -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
     <meta name="theme-color" content="#4F46E5">
-    <link rel="icon" sizes="192x192" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Global Shopper">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    
+    <!-- CDN Resources with crossorigin attribute -->
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        'primary-dark': '#4338CA'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <style>
+        /* Loading Spinner Animation */
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fade In Animation */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Fade Out Animation */
+        .fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Hide scrollbar but maintain functionality */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Smooth transitions */
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
-    <div id="root" class="max-w-screen-md mx-auto py-10"></div>
-    <footer class="text-center text-xs text-gray-600 mt-10">
-        © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
-    </footer>
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script type="text/babel" src="app.js"></script>
+<body class="bg-gray-50">
+    <!-- Initial Loading Screen -->
+    <div id="initial-loading" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <div class="text-center">
+            <div class="loading-spinner w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+            <p class="mt-4 text-gray-600">Loading Global Shopper...</p>
+        </div>
+    </div>
+
+    <!-- Root Element for React -->
+    <div id="root"></div>
+    
+    <!-- Error Handler -->
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Global error:', {
+                message: msg,
+                url: url,
+                line: lineNo,
+                column: columnNo,
+                error: error
+            });
+            return false;
+        };
+
+        // Log when page loads
+        console.log('Page initialized:', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+        });
+    </script>
+
+    <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(registration => {
-                    console.log('ServiceWorker registered with scope:', registration.scope);
-                }).catch(error => {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    console.log('ServiceWorker registration successful:', registration.scope);
+                } catch (error) {
                     console.error('ServiceWorker registration failed:', error);
-                });
+                }
             });
         }
     </script>
+
+    <!-- Main Application Script -->
+    <script type="text/babel" data-type="module" src="./app.js"></script>
+
+    <!-- Loading Screen Manager -->
+    <script>
+        const removeLoading = () => {
+            const loadingElement = document.getElementById('initial-loading');
+            if (loadingElement) {
+                loadingElement.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingElement.remove();
+                }, 300);
+            }
+        };
+
+        // Remove loading screen in these cases:
+        // 1. After a maximum timeout
+        setTimeout(removeLoading, 5000);
+
+        // 2. When React is ready
+        window.addEventListener('load', () => {
+            if (window.React) {
+                setTimeout(removeLoading, 500);
+            }
+        });
+
+        // 3. When app signals it's ready
+        window.addEventListener('app-ready', removeLoading);
+    </script>
+
+    <!-- Fallback Content (if JavaScript is disabled) -->
+    <noscript>
+        <div class="fixed inset-0 flex items-center justify-center bg-white">
+            <div class="text-center p-4">
+                <h1 class="text-2xl font-bold text-gray-900 mb-4">JavaScript Required</h1>
+                <p class="text-gray-600">
+                    Please enable JavaScript to use Global Shopper.
+                </p>
+            </div>
+        </div>
+    </noscript>
 </body>
 </html>
