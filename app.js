@@ -1,3 +1,6 @@
+// Import Lucide icons
+const { Menu, Settings, ChevronUp, ChevronDown, X } = lucide;
+
 // Utility Functions
 const STORAGE_KEYS = {
     HISTORY: 'globalShopper_history',
@@ -19,7 +22,6 @@ const CURRENCIES = {
     NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'Dollar' },
     RUB: { flag: '🇷🇺', symbol: '₽', name: 'Ruble' }
 };
-
 // Image compression utility
 const compressImage = async (file) => {
     return new Promise((resolve) => {
@@ -166,54 +168,6 @@ const useInstallPrompt = () => {
 
     return { installPrompt, promptToInstall };
 };
-    const setValue = (value) => {
-        try {
-            const valueToStore = value instanceof Function ? value(storedValue) : value;
-            setStoredValue(valueToStore);
-            window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        } catch (error) {
-            console.error('Error writing to localStorage:', error);
-        }
-    };
-
-    return [storedValue, setValue];
-};
-
-    const fetchRates = React.useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch exchange rates');
-            }
-
-            const data = await response.json();
-            setRates(data.rates);
-            const updateTime = new Date().toISOString();
-            setLastUpdate(updateTime);
-            localStorage.setItem(STORAGE_KEYS.LAST_RATES_UPDATE, updateTime);
-        } catch (err) {
-            setError(err.message);
-            // Try to load cached rates if available
-            const cachedRates = localStorage.getItem('cached_rates');
-            if (cachedRates) {
-                setRates(JSON.parse(cachedRates));
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    React.useEffect(() => {
-        fetchRates();
-        const interval = setInterval(fetchRates, 3600000); // Refresh every hour
-        return () => clearInterval(interval);
-    }, [fetchRates]);
-
-    return { rates, loading, error, lastUpdate, refreshRates: fetchRates };
-};
 // UI Components
 const CurrencyInput = ({ value, onChange, currency, onCurrencyChange, rates, label, readonly = false }) => {
     const inputRef = React.useRef(null);
@@ -286,7 +240,49 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
         setPreviewUrls(newPhotos);
         onPhotoCapture(newPhotos);
     };
-// UI Components for History
+
+    return (
+        <div className="space-y-4">
+            {previewUrls.length < 2 && (
+                <div className="flex items-center justify-center">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="photo-input"
+                    />
+                    <label
+                        htmlFor="photo-input"
+                        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    >
+                        Take Photo
+                    </label>
+                </div>
+            )}
+            <div className="flex space-x-2">
+                {previewUrls.map((url, index) => (
+                    <div key={index} className="relative">
+                        <img
+                            src={url}
+                            alt={`Photo ${index + 1}`}
+                            className="w-24 h-24 object-cover rounded-md"
+                        />
+                        <button
+                            onClick={() => removePhoto(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                        >
+                            ×
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+// History Components
 const HistoryEntry = ({ entry, onDelete, onUpdate }) => {
     const [isExpanded, setIsExpanded] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
@@ -491,50 +487,10 @@ const InstallPrompt = ({ onInstall }) => (
         </div>
     </div>
 );
-    return (
-        <div className="space-y-4">
-            {previewUrls.length < 2 && (
-                <div className="flex items-center justify-center">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="photo-input"
-                    />
-                    <label
-                        htmlFor="photo-input"
-                        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                    >
-                        Take Photo
-                    </label>
-                </div>
-            )}
-            <div className="flex space-x-2">
-                {previewUrls.map((url, index) => (
-                    <div key={index} className="relative">
-                        <img
-                            src={url}
-                            alt={`Photo ${index + 1}`}
-                            className="w-24 h-24 object-cover rounded-md"
-                        />
-                        <button
-                            onClick={() => removePhoto(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                        >
-                            ×
-                        </button>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
 // Main App Component
 const App = () => {
     const { rates, loading, error, lastUpdate, refreshRates } = useExchangeRates();
+    const { installPrompt, promptToInstall } = useInstallPrompt();
     
     // State management
     const [fromCurrency, setFromCurrency] = useLocalStorage('globalShopper_fromCurrency', 'USD');
@@ -601,7 +557,7 @@ const App = () => {
         setToAmount('');
         setPhotos([]);
     };
-    // Continue from Part 5...
+
     const deleteHistoryEntry = (id) => {
         setHistory(prev => prev.filter(entry => entry.id !== id));
     };
