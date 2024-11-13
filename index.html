@@ -34,7 +34,11 @@
 </head>
 <body class="min-h-screen flex flex-col">
     <!-- Main content -->
-    <div id="root" class="flex-grow"></div>
+    <div id="root" class="flex-grow">
+        <div class="flex items-center justify-center h-screen">
+            <div class="text-gray-600">Loading...</div>
+        </div>
+    </div>
     
     <!-- Install Prompt UI -->
     <div id="installPrompt" class="install-banner fixed bottom-0 left-0 right-0 p-4 hidden">
@@ -57,13 +61,13 @@
     <!-- Footer -->
     <footer class="bg-white py-4 border-t border-gray-200">
         <div class="text-center text-sm text-gray-600">
-            © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
+            © 2024 Tridoku™ | Developed by Tripwire Digital | All Rights Reserved
         </div>
     </footer>
 
-    <!-- React and Dependencies -->
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <!-- React Dependencies -->
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
 
@@ -115,7 +119,17 @@
     }
     </script>
 
+    <!-- React Render Script -->
+    <script type="text/babel">
+        window.addEventListener('load', () => {
+            ReactDOM.render(
+                <GlobalShopper />,
+                document.getElementById('root')
+            );
+        });
+    </script>
+
     <!-- App Script -->
-    <script type="text/babel" src="app.js"></script>
+    <script type="text/babel" src="app.js" data-type="module"></script>
 </body>
 </html>
