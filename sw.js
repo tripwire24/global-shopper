@@ -1,6 +1,6 @@
 const CACHE_NAME = 'global-shopper-v1';
-const STATIC_CACHE = 'global-shopper-static-v1';
-const DYNAMIC_CACHE = 'global-shopper-dynamic-v1';
+const STATIC_CACHE = 'static-cache-v1';
+const DYNAMIC_CACHE = 'dynamic-cache-v1';
 
 const STATIC_ASSETS = [
     './',
@@ -9,26 +9,18 @@ const STATIC_ASSETS = [
     './manifest.json',
     './icon-192.png',
     './icon-512.png',
-    'https://unpkg.com/react@17.0.2/umd/react.production.min.js',
-    'https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js',
-    'https://unpkg.com/babel-standalone@6.26.0/babel.min.js',
-    'https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js',
+    'https://unpkg.com/react@17/umd/react.development.js',
+    'https://unpkg.com/react-dom@17/umd/react-dom.development.js',
+    'https://unpkg.com/@babel/standalone/babel.min.js',
     'https://cdn.tailwindcss.com'
 ];
 
 // Install Event
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        Promise.all([
-            caches.open(STATIC_CACHE)
-                .then(cache => {
-                    console.log('Caching static assets');
-                    return cache.addAll(STATIC_ASSETS);
-                }),
-            self.skipWaiting()
-        ]).catch(error => {
-            console.error('Cache addAll failed:', error);
-        })
+        caches.open(STATIC_CACHE)
+            .then(cache => cache.addAll(STATIC_ASSETS))
+            .then(() => self.skipWaiting())
     );
 });
 
@@ -38,10 +30,7 @@ self.addEventListener('activate', (event) => {
         Promise.all([
             caches.keys().then(keys => Promise.all(
                 keys.filter(key => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
-                    .map(key => {
-                        console.log('Deleting old cache:', key);
-                        return caches.delete(key);
-                    })
+                    .map(key => caches.delete(key))
             )),
             self.clients.claim()
         ])
@@ -83,11 +72,6 @@ self.addEventListener('fetch', (event) => {
                                 cache.put(event.request, responseToCache);
                             });
                         return response;
-                    })
-                    .catch(error => {
-                        console.error('Fetch failed:', error);
-                        // Return a fallback response if available
-                        return caches.match('./offline.html');
                     });
             })
     );
