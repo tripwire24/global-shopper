@@ -1,6 +1,3 @@
-// app.js: Main JavaScript for Global Shopper PWA
-
-// Base URL for exchange rates API
 const BASE_URL = 'https://api.exchangerate-api.com/v4/latest/';
 
 // DOM elements
