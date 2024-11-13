@@ -669,22 +669,24 @@ return (
                                                                 </svg>
                                                                 <span className="text-sm text-gray-500">Add photo</span>
                                                             </button>
-                                                        )}
+                    }}
+                                                            </div>
+                                                        </div>
+                                                        </div>
+                    
+                                                        <div className="text-sm text-gray-500 space-y-1">
+                                                            <p>Rate: 1 {entry.fromCurrency} = {entry.rate ? entry.rate.toFixed(4) : '0.0000'} {entry.toCurrency}</p>
+                                                            <p>{entry.timestamp ? entry.timestamp : ''}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                                    <div className="text-sm text-gray-500 space-y-1">
-                                                    <p>Rate: 1 {entry.fromCurrency} = {entry.rate ? entry.rate.toFixed(4) : '0.0000'} {entry.toCurrency}</p>
-                                                    <p>{entry.timestamp || ''}</p>
-                                                </div>
-                                            </div>
-                                        )}
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                 {/* Delete All Confirmation Modal */}
                 {showDeleteConfirm && (
