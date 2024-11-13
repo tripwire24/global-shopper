@@ -1,3 +1,5 @@
+import { Menu, Settings, Camera } from 'lucide-react';
+
 // Utility Functions
 const STORAGE_KEYS = {
     HISTORY: 'globalShopper_history',
@@ -5,12 +7,19 @@ const STORAGE_KEYS = {
     LAST_RATES_UPDATE: 'globalShopper_lastRatesUpdate'
 };
 
-const CURRENCY_SYMBOLS = {
-    USD: '$', EUR: '€', GBP: '£', JPY: '¥', 
-    CNY: '¥', AUD: 'A$', CAD: 'C$', CHF: 'Fr',
-    HKD: 'HK$', NZD: 'NZ$'
+const CURRENCIES = {
+    USD: { flag: '🇺🇸', symbol: '$', name: 'Dollar' },
+    EUR: { flag: '🇪🇺', symbol: '€', name: 'Euro' },
+    GBP: { flag: '🇬🇧', symbol: '£', name: 'Pound' },
+    JPY: { flag: '🇯🇵', symbol: '¥', name: 'Yen' },
+    AUD: { flag: '🇦🇺', symbol: 'A$', name: 'Dollar' },
+    CAD: { flag: '🇨🇦', symbol: 'C$', name: 'Dollar' },
+    CHF: { flag: '🇨🇭', symbol: 'Fr', name: 'Franc' },
+    CNY: { flag: '🇨🇳', symbol: '¥', name: 'Yuan' },
+    HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Dollar' },
+    NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'Dollar' },
+    RUB: { flag: '🇷🇺', symbol: '₽', name: 'Ruble' }
 };
-
 // Image compression utility
 const compressImage = async (file) => {
     return new Promise((resolve) => {
@@ -159,28 +168,39 @@ const useInstallPrompt = () => {
 // UI Components
 const CurrencyInput = ({ value, onChange, currency, onCurrencyChange, rates, label, readonly = false }) => {
     const inputRef = React.useRef(null);
+        const handleValueChange = (e) => {
+        // Remove non-numeric characters except decimal point
+        const sanitizedValue = e.target.value.replace(/[^\d.]/g, '');
+        // Ensure only one decimal point
+        const parts = sanitizedValue.split('.');
+        if (parts.length > 2) return;
+        onChange(sanitizedValue);
+    };
 
     return (
         <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium text-gray-700">{label}</label>
-            <div className="flex space-x-2">
+            <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-2xl mr-3">
+                    {CURRENCIES[currency]?.flag}
+                </span>
                 <select
                     value={currency}
                     onChange={(e) => onCurrencyChange(e.target.value)}
-                    className="block w-32 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
-                    {Object.keys(rates || {}).sort().map(curr => (
-                        <option key={curr} value={curr}>
-                            {curr} {CURRENCY_SYMBOLS[curr] ? `(${CURRENCY_SYMBOLS[curr]})` : ''}
+                    className="flex-1 bg-transparent outline-none text-lg border-none focus:ring-0">
+                    {Object.entries(rates || {}).sort().map(([code]) => (
+                        <option key={code} value={code}>
+                            {code} / {CURRENCIES[code]?.name || code}
                         </option>
                     ))}
                 </select>
                 <input
                     ref={inputRef}
-                    type="number"
+                    type="text"
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={handleValueChange}
                     readOnly={readonly}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                    className="block w-full bg-transparent border-none outline-none text-right focus:ring-0"
                     placeholder="0.00"
                 />
             </div>
@@ -638,60 +658,70 @@ const App = () => {
             )}
 
             {/* Currency Converter */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                {error ? (
-                    <div className="text-red-600 mb-4">
-                        Error loading exchange rates. Please try again later.
-                    </div>
-                ) : loading ? (
-                    <div className="flex justify-center items-center py-8">
-                        <div className="loading-spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                    </div>
-                ) : (
-                    <div className="space-y-6">
-                        <CurrencyInput
-                            label="From"
-                            value={fromAmount}
-                            onChange={handleFromAmountChange}
-                            currency={fromCurrency}
-                            onCurrencyChange={setFromCurrency}
-                            rates={rates}
-                        />
-                        <CurrencyInput
-                            label="To"
-                            value={toAmount}
-                            onChange={handleToAmountChange}
-                            currency={toCurrency}
-                            onCurrencyChange={setToCurrency}
-                            rates={rates}
-                        />
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                            <span>
-                                Last updated: {lastUpdate ? formatDate(lastUpdate) : 'Never'}
-                            </span>
-                            <button
-                                onClick={refreshRates}
-                                className="text-primary hover:text-primary-dark">
-                                Refresh Rates
-                            </button>
-                        </div>
-                        <PhotoCapture
-                            onPhotoCapture={setPhotos}
-                            existingPhotos={photos}
-                        />
-                        <button
-                            onClick={addToHistory}
-                            disabled={!fromAmount || !toAmount}
-                            className={`w-full py-2 px-4 rounded-md ${
-                                fromAmount && toAmount
-                                    ? 'bg-primary text-white hover:bg-primary-dark'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}>
-                            Save Conversion
-                        </button>
-                    </div>
-                )}
+<div className="bg-blue-500 rounded-lg shadow-sm p-6 mb-6">
+    <div className="flex justify-between items-center mb-6 text-white">
+        <Menu className="w-6 h-6" />
+        <Settings className="w-6 h-6" />
+    </div>
+
+    {error ? (
+        <div className="text-red-600 mb-4">
+            Error loading exchange rates. Please try again later.
+        </div>
+    ) : loading ? (
+        <div className="flex justify-center items-center py-8">
+            <div className="loading-spinner w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+    ) : (
+        <div className="bg-white rounded-lg p-6">
+            <div className="space-y-6">
+                <CurrencyInput
+                    label="From"
+                    value={fromAmount}
+                    onChange={handleFromAmountChange}
+                    currency={fromCurrency}
+                    onCurrencyChange={setFromCurrency}
+                    rates={rates}
+                />
+                <CurrencyInput
+                    label="To"
+                    value={toAmount}
+                    onChange={handleToAmountChange}
+                    currency={toCurrency}
+                    onCurrencyChange={setToCurrency}
+                    rates={rates}
+                />
+                
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>
+                        Last updated: {lastUpdate ? formatDate(lastUpdate) : 'Never'}
+                    </span>
+                    <button
+                        onClick={refreshRates}
+                        className="text-primary hover:text-primary-dark">
+                        Refresh Rates
+                    </button>
+                </div>
+
+                <PhotoCapture
+                    onPhotoCapture={setPhotos}
+                    existingPhotos={photos}
+                />
+                
+                <button
+                    onClick={addToHistory}
+                    disabled={!fromAmount || !toAmount}
+                    className={`w-full py-3 px-4 rounded-lg ${
+                        fromAmount && toAmount
+                            ? 'bg-blue-500 text-white hover:bg-blue-600'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    } transition-colors`}>
+                    Save Conversion
+                </button>
             </div>
+        </div>
+    )}
+</div>
 
             {/* Conversion History */}
             <HistoryList
