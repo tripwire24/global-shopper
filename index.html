@@ -11,26 +11,15 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
     
-    <!-- iOS Meta Tags -->
-    <meta name="format-detection" content="telephone=no">
-    <meta name="mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Global Shopper">
-    
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
     
     <!-- Scripts -->
-    <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Make React hooks available globally -->
-    <script>
-        const { useState, useEffect, useRef } = React;
-    </script>
 </head>
 <body>
     <div id="root">
@@ -39,7 +28,7 @@
         </div>
     </div>
 
-    <!-- App Script -->
+    <!-- Test Script (temporary) -->
     <script type="text/babel" src="test.js"></script>
 
     <!-- Service Worker Registration -->
