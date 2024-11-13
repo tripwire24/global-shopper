@@ -1,18 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-// Currency flag emoji mapping
 const CURRENCY_FLAGS = {
-    USD: '🇺🇸',
-    EUR: '🇪🇺',
-    GBP: '🇬🇧',
-    JPY: '🇯🇵',
-    AUD: '🇦🇺',
-    CAD: '🇨🇦',
-    CHF: '🇨🇭',
-    CNY: '🇨🇳',
-    NZD: '🇳🇿',
-    PHP: '🇵🇭',
-    // Add more currencies as needed
+    USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', AUD: '🇦🇺',
+    CAD: '🇨🇦', CHF: '🇨🇭', CNY: '🇨🇳', NZD: '🇳🇿', PHP: '🇵🇭'
 };
 
 function GlobalShopper() {
@@ -20,8 +8,7 @@ function GlobalShopper() {
     const [toCurrency, setToCurrency] = useState('USD');
     const [fromAmount, setFromAmount] = useState('');
     const [toAmount, setToAmount] = useState('');
-    const [rates, setRates] = useState({});
-    const [currencies, setCurrencies] = useState([]);
+    const [rate, setRate] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
     const [error, setError] = useState(null);
@@ -29,53 +16,9 @@ function GlobalShopper() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [expandedItem, setExpandedItem] = useState(null);
     const [expandedImage, setExpandedImage] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
-    const [isToDropdownOpen, setIsToDropdownOpen] = useState(false);
     const videoRef = useRef(null);
     const photoRef = useRef(null);
-    const fromDropdownRef = useRef(null);
-    const toDropdownRef = useRef(null);
 
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (fromDropdownRef.current && !fromDropdownRef.current.contains(event.target)) {
-                setIsFromDropdownOpen(false);
-            }
-            if (toDropdownRef.current && !toDropdownRef.current.contains(event.target)) {
-                setIsToDropdownOpen(false);
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    // Filter currencies based on search term
-    const filteredCurrencies = currencies.filter(currency => 
-        currency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        getCurrencyName(currency).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    function getCurrencyName(code) {
-        const currencyNames = {
-            USD: 'US Dollar',
-            EUR: 'Euro',
-            GBP: 'British Pound',
-            JPY: 'Japanese Yen',
-            AUD: 'Australian Dollar',
-            CAD: 'Canadian Dollar',
-            CHF: 'Swiss Franc',
-            CNY: 'Chinese Yuan',
-            NZD: 'New Zealand Dollar',
-            PHP: 'Philippine Peso',
-            // Add more currency names as needed
-        };
-        return currencyNames[code] || code;
-    }
     // Data persistence useEffect
     useEffect(() => {
         const loadSavedData = () => {
@@ -100,19 +43,34 @@ function GlobalShopper() {
         };
     }, []);
 
+    // Storage check useEffect
+    useEffect(() => {
+        const checkStorage = async () => {
+            try {
+                const estimate = await navigator.storage.estimate();
+                const percentageUsed = (estimate.usage / estimate.quota) * 100;
+                if (percentageUsed > 80) {
+                    setError('Storage space is running low. Consider deleting some photos.');
+                }
+            } catch (err) {
+                console.log('Storage estimation not available');
+            }
+        };
+        
+        checkStorage();
+    }, [history]);
+
     // Exchange rate fetch function
-    const fetchExchangeRates = async () => {
+    const fetchExchangeRate = async () => {
         try {
             setIsLoading(true);
             const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             const data = await response.json();
-            setRates(data.rates);
-            setCurrencies(Object.keys(data.rates).sort());
+            setRate(data.rates[toCurrency] / data.rates[fromCurrency]);
             setLastUpdated(new Date().toLocaleString());
             setError(null);
         } catch (err) {
-            setError('Failed to fetch exchange rates. Using stored rates.');
-            setCurrencies(Object.keys(CURRENCY_FLAGS));
+            setError('Failed to fetch exchange rate. Using stored rate.');
         } finally {
             setIsLoading(false);
         }
@@ -120,38 +78,18 @@ function GlobalShopper() {
 
     // Exchange rate fetch useEffect
     useEffect(() => {
-        fetchExchangeRates();
-        const interval = setInterval(fetchExchangeRates, 3600000); // Update every hour
+        fetchExchangeRate();
+        const interval = setInterval(fetchExchangeRate, 3600000);
         return () => clearInterval(interval);
-    }, []);
-
-    const convertCurrency = (value, from, to) => {
-        if (!rates.USD) return '';
-        
-        const amount = parseFloat(value);
-        if (isNaN(amount)) return '';
-
-        // Convert through USD as base rate
-        const inUSD = amount / rates[from];
-        const converted = inUSD * rates[to];
-        return converted.toFixed(2);
-    };
+    }, [fromCurrency, toCurrency]);
 
     const handleFromAmountChange = (e) => {
         const value = e.target.value;
         setFromAmount(value);
-        setToAmount(convertCurrency(value, fromCurrency, toCurrency));
-    };
-
-    const handleCurrencyChange = (currency, type) => {
-        if (type === 'from') {
-            setFromCurrency(currency);
-            setToAmount(convertCurrency(fromAmount, currency, toCurrency));
-            setIsFromDropdownOpen(false);
+        if (value && rate) {
+            setToAmount((parseFloat(value) * rate).toFixed(2));
         } else {
-            setToCurrency(currency);
-            setToAmount(convertCurrency(fromAmount, fromCurrency, currency));
-            setIsToDropdownOpen(false);
+            setToAmount('');
         }
     };
     // Star Rating Component
