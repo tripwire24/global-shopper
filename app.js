@@ -1,9 +1,12 @@
-const { useState, useEffect, useRef } = React;
+import React, { useState, useEffect, useRef } from 'react';
 
 function CurrencyConverter() {
-    const [phpAmount, setPhpAmount] = useState('');
-    const [nzdAmount, setNzdAmount] = useState('');
-    const [rate, setRate] = useState(null);
+    const [fromCurrency, setFromCurrency] = useState('PHP');
+    const [toCurrency, setToCurrency] = useState('NZD');
+    const [fromAmount, setFromAmount] = useState('');
+    const [toAmount, setToAmount] = useState('');
+    const [rates, setRates] = useState({});
+    const [currencies, setCurrencies] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
     const [error, setError] = useState(null);
@@ -16,8 +19,6 @@ function CurrencyConverter() {
 
     // Data persistence useEffect
     useEffect(() => {
-        const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
-        
         const loadSavedData = () => {
             const savedHistory = localStorage.getItem('conversionHistory');
             if (savedHistory) {
@@ -38,45 +39,63 @@ function CurrencyConverter() {
             window.removeEventListener('storage', loadSavedData);
             window.removeEventListener('historyUpdate', loadSavedData);
         };
-    }, []);    
-
-    // Storage check useEffect
-    useEffect(() => {
-        const checkStorage = async () => {
-            try {
-                const estimate = await navigator.storage.estimate();
-                const percentageUsed = (estimate.usage / estimate.quota) * 100;
-                if (percentageUsed > 80) {
-                    setError('Storage space is running low. Consider deleting some photos.');
-                }
-            } catch (err) {
-                console.log('Storage estimation not available');
-            }
-        };
-        
-        checkStorage();
-    }, [history]);
+    }, []);
 
     // Exchange rate fetch function
-    const fetchExchangeRate = async () => {
+    const fetchExchangeRates = async () => {
         try {
-            const response = await fetch('https://api.exchangerate-api.com/v4/latest/PHP');
+            setIsLoading(true);
+            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             const data = await response.json();
-            setRate(data.rates.NZD);
+            setRates(data.rates);
+            setCurrencies(Object.keys(data.rates).sort());
             setLastUpdated(new Date().toLocaleString());
             setError(null);
         } catch (err) {
-            setError('Failed to fetch exchange rate. Using stored rate.');
-            setRate(0.027); // Fallback rate
+            setError('Failed to fetch exchange rates. Using stored rates.');
+            // Provide some basic currencies as fallback
+            setCurrencies(['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'PHP', 'NZD']);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     // Exchange rate fetch useEffect
     useEffect(() => {
-        fetchExchangeRate();
-        const interval = setInterval(fetchExchangeRate, 3600000);
+        fetchExchangeRates();
+        const interval = setInterval(fetchExchangeRates, 3600000); // Update every hour
         return () => clearInterval(interval);
     }, []);
+
+    const convertCurrency = (value, from, to) => {
+        if (!rates.USD) return '';
+        
+        const amount = parseFloat(value);
+        if (isNaN(amount)) return '';
+
+        // Convert through USD as base rate
+        const inUSD = amount / rates[from];
+        const converted = inUSD * rates[to];
+        return converted.toFixed(2);
+    };
+
+    const handleFromAmountChange = (e) => {
+        const value = e.target.value;
+        setFromAmount(value);
+        setToAmount(convertCurrency(value, fromCurrency, toCurrency));
+    };
+
+    const handleCurrencyChange = (value, type) => {
+        if (type === 'from') {
+            setFromCurrency(value);
+            setToAmount(convertCurrency(fromAmount, value, toCurrency));
+        } else {
+            setToCurrency(value);
+            setToAmount(convertCurrency(fromAmount, fromCurrency, value));
+        }
+    };
+
+    // StarRating component remains the same
     const StarRating = ({ rating, onRatingChange }) => {
         return (
             <div className="flex items-center space-x-1">
@@ -100,128 +119,16 @@ function CurrencyConverter() {
             </div>
         );
     };
-const convertCurrency = (value) => {
-        const amount = parseFloat(value);
-        if (!isNaN(amount) && rate) {
-            setNzdAmount((amount * rate).toFixed(2));
-        } else {
-            setNzdAmount('');
-        }
-    };
 
-    const handlePhpChange = (e) => {
-        const value = e.target.value;
-        setPhpAmount(value);
-        convertCurrency(value);
-    };
-
-    const handleHistoryItemExpand = (id) => {
-        setExpandedItem(expandedItem === id ? null : id);
-    };
-
-    const handleStoreNameUpdate = (id, storeName) => {
-        const newHistory = history.map(item => {
-            if (item.id === id) {
-                return { ...item, storeName };
-            }
-            return item;
-        });
-        setHistory(newHistory);
-        localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
-    };
-
-    const handleRatingUpdate = (id, rating) => {
-        const newHistory = history.map(item => {
-            if (item.id === id) {
-                return { ...item, rating };
-            }
-            return item;
-        });
-        setHistory(newHistory);
-        localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
-    };
-
-    // Handle photo capture function
-const handlePhotoCapture = async (id, photoNumber) => {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
-        });
-
-        // Create and add camera UI
-        const cameraUI = document.createElement('div');
-        cameraUI.innerHTML = `
-            <div class="fixed inset-0 bg-black z-50 flex flex-col">
-                <video autoplay playsinline class="h-full w-full object-cover"></video>
-                <div class="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4">
-                    <button class="capture-btn bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                        <span class="text-3xl">📸</span>
-                    </button>
-                    <button class="cancel-btn bg-red-500 text-white px-4 py-2 rounded-lg">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(cameraUI);
-
-        const video = cameraUI.querySelector('video');
-        video.srcObject = stream;
-        await video.play();
-
-        return new Promise((resolve, reject) => {
-            const captureBtn = cameraUI.querySelector('.capture-btn');
-            const cancelBtn = cameraUI.querySelector('.cancel-btn');
-
-            cancelBtn.onclick = () => {
-                stream.getTracks().forEach(track => track.stop());
-                document.body.removeChild(cameraUI);
-                reject('Camera cancelled');
-            };
-
-            captureBtn.onclick = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-
-                // Compress the image
-                const photoData = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
-
-                stream.getTracks().forEach(track => track.stop());
-                document.body.removeChild(cameraUI);
-
-                // Update history with new photo
-                const newHistory = history.map(item => {
-                    if (item.id === id) {
-                        return {
-                            ...item,
-                            [`photo${photoNumber}`]: photoData
-                        };
-                    }
-                    return item;
-                });
-                setHistory(newHistory);
-                localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
-                resolve();
-            };
-        });
-    } catch (err) {
-        setError('Camera access denied or not available. Please check your permissions.');
-    }
-};
-    // Separate saveAndReset function
     const saveAndReset = () => {
-        if (phpAmount && nzdAmount) {
+        if (fromAmount && toAmount) {
             const newEntry = {
                 id: Date.now(),
-                php: phpAmount,
-                nzd: nzdAmount,
-                rate: rate,
+                fromCurrency,
+                toCurrency,
+                fromAmount,
+                toAmount,
+                rate: rates[toCurrency] / rates[fromCurrency],
                 timestamp: new Date().toLocaleString(),
                 storeName: '',
                 rating: 0,
@@ -231,31 +138,20 @@ const handlePhotoCapture = async (id, photoNumber) => {
             const newHistory = [newEntry, ...history.slice(0, 9)];
             setHistory(newHistory);
             localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
-            setPhpAmount('');
-            setNzdAmount('');
+            setFromAmount('');
+            setToAmount('');
         }
     };
 
-    const deleteHistoryItem = (id) => {
-        const newHistory = history.filter(item => item.id !== id);
-        setHistory(newHistory);
-        localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
-    };
-
-    const deleteAllHistory = () => {
-        setHistory([]);
-        localStorage.removeItem('conversionHistory');
-        setShowDeleteConfirm(false);
-    };
-            return (
+    return (
         <div className="min-h-screen p-4 space-y-6">
             {/* Main converter card */}
             <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-indigo-600 px-6 py-4">
-                    <h1 className="text-2xl font-bold text-white text-center">PHP to NZD Converter</h1>
+                    <h1 className="text-2xl font-bold text-white text-center">Currency Converter</h1>
                     {lastUpdated && (
                         <p className="text-indigo-100 text-sm text-center mt-1">
-                            Rate: 1 PHP = {rate?.toFixed(4)} NZD (Updated: {lastUpdated})
+                            Last Updated: {lastUpdated}
                         </p>
                     )}
                 </div>
@@ -268,41 +164,72 @@ const handlePhotoCapture = async (id, photoNumber) => {
                     )}
 
                     <div className="space-y-4">
-                        {/* PHP Amount Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Amount (PHP)
-                            </label>
-                            <input
-                                type="number"
-                                value={phpAmount}
-                                onChange={handlePhpChange}
-                                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                                placeholder="Enter amount in PHP"
-                            />
+                        {/* From Currency Section */}
+                        <div className="space-y-2">
+                            <div className="flex space-x-2">
+                                <div className="w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        From
+                                    </label>
+                                    <select
+                                        value={fromCurrency}
+                                        onChange={(e) => handleCurrencyChange(e.target.value, 'from')}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        {currencies.map(curr => (
+                                            <option key={curr} value={curr}>{curr}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="w-2/3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Amount
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={fromAmount}
+                                        onChange={handleFromAmountChange}
+                                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder={`Enter amount in ${fromCurrency}`}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* NZD Amount Display */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Amount (NZD)
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={nzdAmount}
-                                    readOnly
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
-                                />
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <span className="text-gray-500">NZD</span>
+                        {/* To Currency Section */}
+                        <div className="space-y-2">
+                            <div className="flex space-x-2">
+                                <div className="w-1/3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        To
+                                    </label>
+                                    <select
+                                        value={toCurrency}
+                                        onChange={(e) => handleCurrencyChange(e.target.value, 'to')}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        {currencies.map(curr => (
+                                            <option key={curr} value={curr}>{curr}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="w-2/3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Converted Amount
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={toAmount}
+                                        readOnly
+                                        className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         <button
                             onClick={saveAndReset}
-                            disabled={!phpAmount || !nzdAmount}
+                            disabled={!fromAmount || !toAmount}
                             className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Save & Reset
@@ -310,22 +237,23 @@ const handlePhotoCapture = async (id, photoNumber) => {
 
                         {isLoading && (
                             <div className="text-center text-gray-600 animate-pulse">
-                                Processing...
+                                Updating rates...
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-{/* History section */}
-{history.length > 0 && (
+
+            {/* History section remains largely the same, just update display of currencies */}
+            {history.length > 0 && (
                 <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
                     <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center">
                         <h2 className="text-xl font-bold text-white">Conversion History</h2>
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="text-2xl hover:opacity-75 transition"
+                            className="text-white hover:text-red-200 transition"
                         >
-                            ⛔
+                            Delete All
                         </button>
                     </div>
                     <div className="divide-y divide-gray-200 max-h-96 overflow-auto">
@@ -333,25 +261,20 @@ const handlePhotoCapture = async (id, photoNumber) => {
                             <div key={entry.id} className="p-4 hover:bg-gray-50 transition">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <span className="text-lg font-medium text-gray-900">₱{entry.php}</span>
+                                        <span className="text-lg font-medium text-gray-900">
+                                            {entry.fromAmount} {entry.fromCurrency}
+                                        </span>
                                         <span className="mx-2 text-gray-500">→</span>
-                                        <span className="text-lg font-medium text-indigo-600">NZ${entry.nzd}</span>
+                                        <span className="text-lg font-medium text-indigo-600">
+                                            {entry.toAmount} {entry.toCurrency}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center space-x-3">
-                                        <button
-                                            onClick={() => handleHistoryItemExpand(entry.id)}
-                                            className="px-3 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-600 rounded-lg hover:bg-indigo-50 transition"
-                                        >
-                                            {expandedItem === entry.id ? 'Less Info' : 'More Info'}
-                                        </button>
-                                        <button
-                                            onClick={() => deleteHistoryItem(entry.id)}
-                                            className="text-2xl hover:opacity-75 transition p-2"
-                                            aria-label="Delete"
-                                        >
-                                            ⛔
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => handleHistoryItemExpand(entry.id)}
+                                        className="text-sm text-indigo-600 hover:text-indigo-800"
+                                    >
+                                        {expandedItem === entry.id ? 'Less' : 'More'}
+                                    </button>
                                 </div>
 
                                 {expandedItem === entry.id && (
@@ -363,7 +286,16 @@ const handlePhotoCapture = async (id, photoNumber) => {
                                             <input
                                                 type="text"
                                                 value={entry.storeName || ''}
-                                                onChange={(e) => handleStoreNameUpdate(entry.id, e.target.value)}
+                                                onChange={(e) => {
+                                                    const newHistory = history.map(item => {
+                                                        if (item.id === entry.id) {
+                                                            return { ...item, storeName: e.target.value };
+                                                        }
+                                                        return item;
+                                                    });
+                                                    setHistory(newHistory);
+                                                    localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
+                                                }}
                                                 placeholder="Enter store name"
                                                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                             />
@@ -374,7 +306,16 @@ const handlePhotoCapture = async (id, photoNumber) => {
                                             </label>
                                             <StarRating
                                                 rating={entry.rating || 0}
-                                                onRatingChange={(rating) => handleRatingUpdate(entry.id, rating)}
+                                                onRatingChange={(rating) => {
+                                                    const newHistory = history.map(item => {
+                                                        if (item.id === entry.id) {
+                                                            return { ...item, rating };
+                                                        }
+                                                        return item;
+                                                    });
+                                                    setHistory(newHistory);
+                                                    localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
+                                                }}
                                             />
                                         </div>
                                         <div>
@@ -459,7 +400,7 @@ const handlePhotoCapture = async (id, photoNumber) => {
                                             </div>
                                         </div>
                                         <div className="text-sm text-gray-500">
-                                            Rate: 1 PHP = {entry.rate?.toFixed(4)} NZD
+                                            Rate: 1 {entry.fromCurrency} = {entry.rate?.toFixed(4)} {entry.toCurrency}
                                         </div>
                                         <div className="text-xs text-gray-400">
                                             {entry.timestamp}
@@ -471,26 +412,29 @@ const handlePhotoCapture = async (id, photoNumber) => {
                     </div>
                 </div>
             )}
-{/* Delete All Confirmation Modal */}
+
+            {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-6 rounded-2xl w-full max-w-sm">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">Delete All History?</h3>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete all conversion history? This action cannot be undone.
-                        </p>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+                        <h3 className="text-lg font-medium mb-4">Delete All History?</h3>
+                        <p className="text-gray-500 mb-4">This action cannot be undone.</p>
                         <div className="flex justify-end space-x-4">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
-                                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition"
+                                className="text-gray-600 hover:text-gray-800"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={deleteAllHistory}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                onClick={() => {
+                                    setHistory([]);
+                                    localStorage.removeItem('conversionHistory');
+                                    setShowDeleteConfirm(false);
+                                }}
+                                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                             >
-                                Delete All
+                                Delete
                             </button>
                         </div>
                     </div>
@@ -531,8 +475,4 @@ const handlePhotoCapture = async (id, photoNumber) => {
     );
 }
 
-// Render the app
-ReactDOM.render(
-    <CurrencyConverter />,
-    document.getElementById('root')
-);
+export default CurrencyConverter;
