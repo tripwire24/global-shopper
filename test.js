@@ -1,4 +1,4 @@
-console.log('App starting...');
+console.log('Test file loading...');
 
 function TestApp() {
     const [count, setCount] = React.useState(0);
@@ -16,6 +16,7 @@ function TestApp() {
     );
 }
 
+// Render the app
 ReactDOM.render(
     <TestApp />,
     document.getElementById('root')
