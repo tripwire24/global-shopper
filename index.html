@@ -21,6 +21,11 @@
     <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Make React hooks available globally -->
+    <script>
+        const { useState, useEffect, useRef } = React;
+    </script>
 </head>
 <body>
     <div id="root">
@@ -28,6 +33,9 @@
             <div class="text-gray-600">Loading...</div>
         </div>
     </div>
+
+    <!-- App Script -->
+    <script type="text/javascript" src="app.js"></script>
 
     <!-- Service Worker Registration -->
     <script>
@@ -43,12 +51,5 @@
             });
         }
     </script>
-
-    <!-- App Script -->
-    <script type="text/javascript">
-        // Define React hooks at the global scope
-        const { useState, useEffect, useRef } = React;
-    </script>
-    <script src="app.js"></script>
 </body>
 </html>
