@@ -206,30 +206,6 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
                 alert('Error processing image. Please try again.');
             }
         }
-        // Reset file input
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
-    const [previewUrls, setPreviewUrls] = React.useState(existingPhotos);
-    const fileInputRef = React.useRef(null);
-
-    const handleFileSelect = async (event) => {
-        const file = event.target.files[0];
-        if (file && previewUrls.length < 2) {
-            try {
-                const compressedBlob = await compressImage(file);
-                const newPhotoUrl = URL.createObjectURL(compressedBlob);
-                const newPhotos = [...previewUrls, newPhotoUrl];
-                setPreviewUrls(newPhotos);
-                onPhotoCapture(newPhotos);
-            } catch (error) {
-                console.error('Error processing image:', error);
-                alert('Error processing image. Please try again.');
-            }
-        }
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
