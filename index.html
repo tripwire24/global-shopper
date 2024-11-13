@@ -66,10 +66,12 @@
     </footer>
 
     <!-- React Dependencies -->
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
 
     <!-- PWA Install Script -->
     <script>
@@ -83,7 +85,6 @@
         document.getElementById('installPrompt').classList.remove('hidden');
     });
 
-    // Handle Install Button Click
     document.getElementById('installButton').addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
@@ -93,43 +94,64 @@
         }
     });
 
-    // Handle Dismiss Button Click
     document.getElementById('dismissInstall').addEventListener('click', () => {
         document.getElementById('installPrompt').classList.add('hidden');
     });
 
-    // Log when the app is launched in standalone mode
     window.addEventListener('load', () => {
         if (window.matchMedia('(display-mode: standalone)').matches) {
             console.log('App is running in standalone mode');
         }
     });
-
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(registration => {
-                    console.log('SW registered:', registration.scope);
-                })
-                .catch(error => {
-                    console.log('SW registration failed:', error);
-                });
-        });
-    }
     </script>
 
-    <!-- React Render Script -->
+    <!-- React Initialization -->
     <script type="text/babel">
-        window.addEventListener('load', () => {
-            ReactDOM.render(
-                <GlobalShopper />,
-                document.getElementById('root')
-            );
+        console.log('React version:', React.version);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const TestComponent = () => {
+                return <div>Testing React Render</div>;
+            };
+            
+            try {
+                ReactDOM.render(
+                    <TestComponent />,
+                    document.getElementById('root'),
+                    () => {
+                        console.log('Test component rendered successfully');
+                        ReactDOM.render(
+                            <GlobalShopper />,
+                            document.getElementById('root')
+                        );
+                    }
+                );
+            } catch (error) {
+                console.error('React render error:', error);
+            }
         });
     </script>
 
     <!-- App Script -->
-    <script type="text/babel" src="app.js" data-type="module"></script>
+    <script type="text/babel" src="app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for(let registration of registrations) {
+                        await registration.unregister();
+                    }
+                    
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    console.log('SW registered:', registration.scope);
+                } catch (error) {
+                    console.log('SW registration failed:', error);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
