@@ -1,78 +1,41 @@
-const CACHE_NAME = 'global-shopper-v1';
-const STATIC_CACHE = 'static-cache-v1';
-const DYNAMIC_CACHE = 'dynamic-cache-v1';
-
-const STATIC_ASSETS = [
-    './',
-    './index.html',
-    './app.js',
-    './manifest.json',
-    './icon-192.png',
-    './icon-512.png',
-    'https://unpkg.com/react@17/umd/react.development.js',
-    'https://unpkg.com/react-dom@17/umd/react-dom.development.js',
-    'https://unpkg.com/@babel/standalone/babel.min.js',
-    'https://cdn.tailwindcss.com'
-];
-
-// Install Event
+// sw.js
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-            .then(cache => cache.addAll(STATIC_ASSETS))
-            .then(() => self.skipWaiting())
+        caches.open('global-shopper-v1').then((cache) => {
+            return cache.addAll([
+                '/',
+                '/index.html',
+                '/app.js',
+                '/icon-192.png',
+                '/icon-512.png',
+                'https://cdn.tailwindcss.com',
+                'https://unpkg.com/react@17/umd/react.development.js',
+                'https://unpkg.com/react-dom@17/umd/react-dom.development.js',
+                'https://unpkg.com/@babel/standalone/babel.min.js'
+            ]);
+        })
     );
 });
 
-// Activate Event
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        Promise.all([
-            caches.keys().then(keys => Promise.all(
-                keys.filter(key => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
-                    .map(key => caches.delete(key))
-            )),
-            self.clients.claim()
-        ])
-    );
-});
-
-// Fetch Event
 self.addEventListener('fetch', (event) => {
-    // Handle API requests
-    if (event.request.url.includes('api.exchangerate-api.com')) {
-        event.respondWith(
-            fetch(event.request)
-                .then(response => {
-                    const clonedResponse = response.clone();
-                    caches.open(DYNAMIC_CACHE)
-                        .then(cache => cache.put(event.request, clonedResponse));
-                    return response;
-                })
-                .catch(() => caches.match(event.request))
-        );
-        return;
-    }
-
-    // Handle static assets
     event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                return fetch(event.request)
-                    .then(response => {
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-                        const responseToCache = response.clone();
-                        caches.open(DYNAMIC_CACHE)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-                        return response;
-                    });
-            })
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
+});
+
+self.addEventListener('activate', (event) => {
+    const cacheWhitelist = ['global-shopper-v1'];
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (!cacheWhitelist.includes(cacheName)) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 });
