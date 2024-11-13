@@ -1,7 +1,33 @@
+// Currency flag emoji mapping
 const CURRENCY_FLAGS = {
-    USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', AUD: '🇦🇺',
-    CAD: '🇨🇦', CHF: '🇨🇭', CNY: '🇨🇳', NZD: '🇳🇿', PHP: '🇵🇭'
+    USD: '🇺🇸',
+    EUR: '🇪🇺',
+    GBP: '🇬🇧',
+    JPY: '🇯🇵',
+    AUD: '🇦🇺',
+    CAD: '🇨🇦',
+    CHF: '🇨🇭',
+    CNY: '🇨🇳',
+    NZD: '🇳🇿',
+    PHP: '🇵🇭',
 };
+
+// Simple Card components
+const Card = ({ children, className = '' }) => (
+    <div className={`bg-white rounded-lg shadow ${className}`}>{children}</div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+    <div className={`p-4 ${className}`}>{children}</div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+    <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>
+);
+
+const CardContent = ({ children, className = '' }) => (
+    <div className={`p-4 ${className}`}>{children}</div>
+);
 
 function GlobalShopper() {
     const [fromCurrency, setFromCurrency] = useState('EUR');
@@ -16,8 +42,29 @@ function GlobalShopper() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [expandedItem, setExpandedItem] = useState(null);
     const [expandedImage, setExpandedImage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
+    const [isToDropdownOpen, setIsToDropdownOpen] = useState(false);
     const videoRef = useRef(null);
     const photoRef = useRef(null);
+    const fromDropdownRef = useRef(null);
+    const toDropdownRef = useRef(null);
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (fromDropdownRef.current && !fromDropdownRef.current.contains(event.target)) {
+                setIsFromDropdownOpen(false);
+            }
+            if (toDropdownRef.current && !toDropdownRef.current.contains(event.target)) {
+                setIsToDropdownOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // Data persistence useEffect
     useEffect(() => {
@@ -43,23 +90,6 @@ function GlobalShopper() {
         };
     }, []);
 
-    // Storage check useEffect
-    useEffect(() => {
-        const checkStorage = async () => {
-            try {
-                const estimate = await navigator.storage.estimate();
-                const percentageUsed = (estimate.usage / estimate.quota) * 100;
-                if (percentageUsed > 80) {
-                    setError('Storage space is running low. Consider deleting some photos.');
-                }
-            } catch (err) {
-                console.log('Storage estimation not available');
-            }
-        };
-        
-        checkStorage();
-    }, [history]);
-
     // Exchange rate fetch function
     const fetchExchangeRate = async () => {
         try {
@@ -79,20 +109,32 @@ function GlobalShopper() {
     // Exchange rate fetch useEffect
     useEffect(() => {
         fetchExchangeRate();
-        const interval = setInterval(fetchExchangeRate, 3600000);
+        const interval = setInterval(fetchExchangeRate, 3600000); // Update every hour
         return () => clearInterval(interval);
     }, [fromCurrency, toCurrency]);
 
-    const handleFromAmountChange = (e) => {
-        const value = e.target.value;
-        setFromAmount(value);
-        if (value && rate) {
-            setToAmount((parseFloat(value) * rate).toFixed(2));
-        } else {
-            setToAmount('');
-        }
-    };
-    // Star Rating Component
+    // Filter currencies based on search term
+    const filteredCurrencies = Object.keys(CURRENCY_FLAGS).filter(currency => 
+        currency.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getCurrencyName(currency).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    function getCurrencyName(code) {
+        const currencyNames = {
+            USD: 'US Dollar',
+            EUR: 'Euro',
+            GBP: 'British Pound',
+            JPY: 'Japanese Yen',
+            AUD: 'Australian Dollar',
+            CAD: 'Canadian Dollar',
+            CHF: 'Swiss Franc',
+            CNY: 'Chinese Yuan',
+            NZD: 'New Zealand Dollar',
+            PHP: 'Philippine Peso',
+        };
+        return currencyNames[code] || code;
+    }
+
     const StarRating = ({ rating, onRatingChange }) => {
         return (
             <div className="flex items-center space-x-1">
@@ -115,6 +157,33 @@ function GlobalShopper() {
                 ))}
             </div>
         );
+    };
+const convertCurrency = (value, from, to) => {
+        if (!rate) return '';
+        
+        const amount = parseFloat(value);
+        if (isNaN(amount)) return '';
+
+        const converted = amount * rate;
+        return converted.toFixed(2);
+    };
+
+    const handleFromAmountChange = (e) => {
+        const value = e.target.value;
+        setFromAmount(value);
+        setToAmount(convertCurrency(value, fromCurrency, toCurrency));
+    };
+
+    const handleCurrencyChange = (currency, type) => {
+        if (type === 'from') {
+            setFromCurrency(currency);
+            setToAmount(convertCurrency(fromAmount, currency, toCurrency));
+            setIsFromDropdownOpen(false);
+        } else {
+            setToCurrency(currency);
+            setToAmount(convertCurrency(fromAmount, fromCurrency, currency));
+            setIsToDropdownOpen(false);
+        }
     };
 
     // Handle photo capture function
@@ -190,7 +259,8 @@ function GlobalShopper() {
             setError('Camera access denied or not available. Please check your permissions.');
         }
     };
-const saveAndReset = () => {
+
+    const saveAndReset = () => {
         if (fromAmount && toAmount) {
             const newEntry = {
                 id: Date.now(),
@@ -198,7 +268,7 @@ const saveAndReset = () => {
                 toCurrency,
                 fromAmount,
                 toAmount,
-                rate: rates[toCurrency] / rates[fromCurrency],
+                rate: rate,
                 timestamp: new Date().toLocaleString(),
                 storeName: '',
                 rating: 0,
@@ -314,8 +384,7 @@ return (
                                         placeholder={`Enter amount in ${fromCurrency}`}
                                     />
                                 </div>
-                                
-                                {/* From Currency Dropdown */}
+{/* From Currency Dropdown */}
                                 {isFromDropdownOpen && (
                                     <div className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                                         <div className="p-2">
@@ -347,7 +416,8 @@ return (
                                     </div>
                                 )}
                             </div>
-{/* To Currency Section */}
+
+                            {/* To Currency Section */}
                             <div ref={toDropdownRef} className="relative">
                                 <div 
                                     onClick={() => setIsToDropdownOpen(!isToDropdownOpen)}
@@ -414,9 +484,9 @@ return (
 
                         {/* Exchange Rate Display */}
                         <div className="mt-6 text-center text-sm text-gray-500">
-                            {rates[fromCurrency] && rates[toCurrency] && (
+                            {rate && (
                                 <p>
-                                    1 {fromCurrency} = {(rates[toCurrency] / rates[fromCurrency]).toFixed(4)} {toCurrency}
+                                    1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
                                 </p>
                             )}
                         </div>
@@ -559,8 +629,7 @@ return (
                                                             </button>
                                                         )}
                                                     </div>
-
-                                                    {/* Photo 2 */}
+{/* Photo 2 */}
                                                     <div className="relative">
                                                         {entry.photo2 ? (
                                                             <div className="relative group">
@@ -616,7 +685,8 @@ return (
                         </div>
                     </div>
                 )}
-{/* Delete All Confirmation Modal */}
+
+                {/* Delete All Confirmation Modal */}
                 {showDeleteConfirm && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
@@ -686,12 +756,10 @@ return (
             </div>
         </div>
     );
-
 }
 
+// Render the app
 ReactDOM.render(
-  <React.StrictMode>
-    <GlobalShopper />
-  </React.StrictMode>,
-  document.getElementById('root')
+    <GlobalShopper />,
+    document.getElementById('root')
 );
