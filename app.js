@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+const { useState, useEffect, useRef } = React;
 
 function CurrencyConverter() {
     // State declarations
@@ -135,6 +135,79 @@ function CurrencyConverter() {
         setToAmount(value);
         convertCurrency(value, 'to');
     };
+   // Add this function to your app.js
+    const handlePhotoCapture = async (id, photoNumber) => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+
+            // Create and add camera UI
+            const cameraUI = document.createElement('div');
+            cameraUI.innerHTML = `
+                <div class="fixed inset-0 bg-black z-50 flex flex-col">
+                    <video autoplay playsinline class="h-full w-full object-cover"></video>
+                    <div class="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4">
+                        <button class="capture-btn bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
+                            <span class="text-3xl">📸</span>
+                        </button>
+                        <button class="cancel-btn bg-red-500 text-white px-4 py-2 rounded-lg">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(cameraUI);
+
+            const video = cameraUI.querySelector('video');
+            video.srcObject = stream;
+            await video.play();
+
+            return new Promise((resolve, reject) => {
+                const captureBtn = cameraUI.querySelector('.capture-btn');
+                const cancelBtn = cameraUI.querySelector('.cancel-btn');
+
+                cancelBtn.onclick = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                    document.body.removeChild(cameraUI);
+                    reject('Camera cancelled');
+                };
+
+                captureBtn.onclick = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+
+                    // Compress the image
+                    const photoData = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+
+                    stream.getTracks().forEach(track => track.stop());
+                    document.body.removeChild(cameraUI);
+
+                    // Update history with new photo
+                    const newHistory = history.map(item => {
+                        if (item.id === id) {
+                            return {
+                                ...item,
+                                [`photo${photoNumber}`]: photoData
+                            };
+                        }
+                        return item;
+                    });
+                    setHistory(newHistory);
+                    localStorage.setItem('conversionHistory', JSON.stringify(newHistory));
+                    resolve();
+                };
+            });
+        } catch (err) {
+            setError('Camera access denied or not available. Please check your permissions.');
+        }
+    }; 
     // History management functions
     const saveAndReset = () => {
         if (fromAmount && toAmount) {
