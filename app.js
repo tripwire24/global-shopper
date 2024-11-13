@@ -212,6 +212,29 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
         }
     };
 
+const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
+    const [previewUrls, setPreviewUrls] = React.useState(existingPhotos);
+    const fileInputRef = React.useRef(null);
+
+    const handleFileSelect = async (event) => {
+        const file = event.target.files[0];
+        if (file && previewUrls.length < 2) {
+            try {
+                const compressedBlob = await compressImage(file);
+                const newPhotoUrl = URL.createObjectURL(compressedBlob);
+                const newPhotos = [...previewUrls, newPhotoUrl];
+                setPreviewUrls(newPhotos);
+                onPhotoCapture(newPhotos);
+            } catch (error) {
+                console.error('Error processing image:', error);
+                alert('Error processing image. Please try again.');
+            }
+        }
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const removePhoto = (index) => {
         const newPhotos = previewUrls.filter((_, i) => i !== index);
         setPreviewUrls(newPhotos);
@@ -233,7 +256,8 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
                     />
                     <label
                         htmlFor="photo-input"
-                        className="cursor-pointer bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark">
+                        className="cursor-pointer bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
+                    >
                         Take Photo
                     </label>
                 </div>
@@ -248,7 +272,8 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
                         />
                         <button
                             onClick={() => removePhoto(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                        >
                             ×
                         </button>
                     </div>
