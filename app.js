@@ -166,18 +166,6 @@ const useInstallPrompt = () => {
 
     return { installPrompt, promptToInstall };
 };
-// Custom hooks
-const useLocalStorage = (key, initialValue) => {
-    const [storedValue, setStoredValue] = React.useState(() => {
-        try {
-            const item = window.localStorage.getItem(key);
-            return item ? JSON.parse(item) : initialValue;
-        } catch (error) {
-            console.error('Error reading from localStorage:', error);
-            return initialValue;
-        }
-    });
-
     const setValue = (value) => {
         try {
             const valueToStore = value instanceof Function ? value(storedValue) : value;
@@ -190,15 +178,6 @@ const useLocalStorage = (key, initialValue) => {
 
     return [storedValue, setValue];
 };
-
-// Exchange rates hook
-const useExchangeRates = () => {
-    const [rates, setRates] = React.useState(null);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
-    const [lastUpdate, setLastUpdate] = React.useState(() => {
-        return localStorage.getItem(STORAGE_KEYS.LAST_RATES_UPDATE) || null;
-    });
 
     const fetchRates = React.useCallback(async () => {
         try {
@@ -307,7 +286,211 @@ const PhotoCapture = ({ onPhotoCapture, existingPhotos = [] }) => {
         setPreviewUrls(newPhotos);
         onPhotoCapture(newPhotos);
     };
+// UI Components for History
+const HistoryEntry = ({ entry, onDelete, onUpdate }) => {
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    const [isEditing, setIsEditing] = React.useState(false);
+    const [storeName, setStoreName] = React.useState(entry.storeName || '');
+    const [rating, setRating] = React.useState(entry.rating || 0);
+    const [showPhotoModal, setShowPhotoModal] = React.useState(false);
+    const [selectedPhoto, setSelectedPhoto] = React.useState(null);
 
+    const handleUpdate = () => {
+        onUpdate({
+            ...entry,
+            storeName,
+            rating
+        });
+        setIsEditing(false);
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-sm p-4 space-y-3">
+            {/* Basic Info */}
+            <div className="flex justify-between items-start">
+                <div>
+                    <div className="flex items-center space-x-2">
+                        <span className="font-medium">
+                            {CURRENCIES[entry.fromCurrency]?.symbol}{entry.fromAmount} {entry.fromCurrency}
+                        </span>
+                        <span>→</span>
+                        <span className="font-medium">
+                            {CURRENCIES[entry.toCurrency]?.symbol}{entry.toAmount} {entry.toCurrency}
+                        </span>
+                    </div>
+                    <div className="text-sm text-gray-500">{formatDate(entry.timestamp)}</div>
+                </div>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-gray-400 hover:text-gray-600">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+            </div>
+
+            {/* Expanded Content */}
+            {isExpanded && (
+                <div className="space-y-4 pt-2 border-t">
+                    {/* Store Name */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Store</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={storeName}
+                                onChange={(e) => setStoreName(e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter store name"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-between">
+                                <span>{storeName || 'No store name'}</span>
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="text-blue-500 hover:text-blue-600">
+                                    Edit
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Photos */}
+                    {entry.photos && entry.photos.length > 0 && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">Photos</label>
+                            <div className="flex space-x-2">
+                                {entry.photos.map((photo, index) => (
+                                    <img
+                                        key={index}
+                                        src={photo}
+                                        alt={`Shopping item ${index + 1}`}
+                                        className="w-20 h-20 object-cover rounded-md cursor-pointer"
+                                        onClick={() => {
+                                            setSelectedPhoto(photo);
+                                            setShowPhotoModal(true);
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex justify-between pt-2">
+                        <button
+                            onClick={() => onDelete(entry.id)}
+                            className="text-red-600 hover:text-red-700 text-sm">
+                            Delete Entry
+                        </button>
+                        {isEditing && (
+                            <button
+                                onClick={handleUpdate}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 text-sm">
+                                Save Changes
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Photo Modal */}
+            {showPhotoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="relative bg-white rounded-lg p-4 max-w-3xl w-full mx-4">
+                        <button
+                            onClick={() => setShowPhotoModal(false)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                            <X className="w-6 h-6" />
+                        </button>
+                        <img
+                            src={selectedPhoto}
+                            alt="Full size view"
+                            className="w-full h-auto rounded-lg"
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const HistoryList = ({ history, onDeleteEntry, onUpdateEntry, onClearHistory }) => {
+    const [showClearConfirm, setShowClearConfirm] = React.useState(false);
+
+    if (history.length === 0) {
+        return (
+            <div className="text-center py-8 text-gray-500">
+                No conversion history yet.
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-lg font-medium">Conversion History</h2>
+                <button
+                    onClick={() => setShowClearConfirm(true)}
+                    className="text-red-600 hover:text-red-700 text-sm">
+                    Clear All
+                </button>
+            </div>
+
+            <div className="space-y-3">
+                {history.map((entry) => (
+                    <HistoryEntry
+                        key={entry.id}
+                        entry={entry}
+                        onDelete={onDeleteEntry}
+                        onUpdate={onUpdateEntry}
+                    />
+                ))}
+            </div>
+
+            {/* Clear Confirmation Modal */}
+            {showClearConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+                        <h3 className="text-lg font-medium mb-4">Clear History</h3>
+                        <p className="text-gray-600 mb-4">
+                            Are you sure you want to clear all conversion history? This cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowClearConfirm(false)}
+                                className="px-4 py-2 border rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onClearHistory();
+                                    setShowClearConfirm(false);
+                                }}
+                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const InstallPrompt = ({ onInstall }) => (
+    <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg border-t flex justify-between items-center">
+        <div className="flex-1">
+            <h3 className="font-medium">Install Global Shopper</h3>
+            <p className="text-sm text-gray-600">Add to your home screen for quick access</p>
+        </div>
+        <div className="flex space-x-2">
+            <button
+                onClick={onInstall}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                Install
+            </button>
+        </div>
+    </div>
+);
     return (
         <div className="space-y-4">
             {previewUrls.length < 2 && (
