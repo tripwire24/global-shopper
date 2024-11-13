@@ -3,155 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="description" content="The Global Shopper - Your worldwide currency converter and shopping companion">
+    <title>The Global Shopper - Currency Converter</title>
     
     <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Global Shopper">
     
-    <title>The Global Shopper</title>
-    
-    <!-- Manifest Link -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Favicon and Apple Touch Icons -->
+    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     
-    <!-- Tailwind CSS -->
+    <!-- Scripts -->
+    <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-        .install-banner {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col">
-    <!-- Main content -->
-    <div id="root" class="flex-grow">
+<body>
+    <div id="root">
         <div class="flex items-center justify-center h-screen">
             <div class="text-gray-600">Loading...</div>
         </div>
     </div>
-    
-    <!-- Install Prompt UI -->
-    <div id="installPrompt" class="install-banner fixed bottom-0 left-0 right-0 p-4 hidden">
-        <div class="max-w-md mx-auto flex items-center justify-between px-4">
-            <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800">Install App</h3>
-                <p class="text-sm text-gray-600 mt-1">Add to your home screen for quick access</p>
-            </div>
-            <div class="flex items-center gap-3 ml-4">
-                <button id="dismissInstall" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
-                    Not now
-                </button>
-                <button id="installButton" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
-                    Install
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-white py-4 border-t border-gray-200">
-        <div class="text-center text-sm text-gray-600">
-            © 2024 Tridoku™ | Developed by Tripwire Digital | All Rights Reserved
-        </div>
-    </footer>
-
-    <!-- React Dependencies -->
-    <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
-
-    <!-- Babel -->
-    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-
-    <!-- PWA Install Script -->
-    <script>
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('beforeinstallprompt triggered');
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log('Install prompt stored');
-        document.getElementById('installPrompt').classList.remove('hidden');
-    });
-
-    document.getElementById('installButton').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            document.getElementById('installPrompt').classList.add('hidden');
-        }
-    });
-
-    document.getElementById('dismissInstall').addEventListener('click', () => {
-        document.getElementById('installPrompt').classList.add('hidden');
-    });
-
-    window.addEventListener('load', () => {
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            console.log('App is running in standalone mode');
-        }
-    });
-    </script>
-
-    <!-- React Initialization -->
-    <script type="text/babel">
-        console.log('React version:', React.version);
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const TestComponent = () => {
-                return <div>Testing React Render</div>;
-            };
-            
-            try {
-                ReactDOM.render(
-                    <TestComponent />,
-                    document.getElementById('root'),
-                    () => {
-                        console.log('Test component rendered successfully');
-                        ReactDOM.render(
-                            <GlobalShopper />,
-                            document.getElementById('root')
-                        );
-                    }
-                );
-            } catch (error) {
-                console.error('React render error:', error);
-            }
-        });
-    </script>
-
-    <!-- App Script -->
-    <script type="text/babel" src="app.js"></script>
 
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for(let registration of registrations) {
-                        await registration.unregister();
-                    }
-                    
-                    const registration = await navigator.serviceWorker.register('./sw.js');
-                    console.log('SW registered:', registration.scope);
-                } catch (error) {
-                    console.log('SW registration failed:', error);
-                }
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
             });
         }
     </script>
+
+    <!-- App Script -->
+    <script type="text/javascript">
+        // Define React hooks at the global scope
+        const { useState, useEffect, useRef } = React;
+    </script>
+    <script src="app.js"></script>
 </body>
 </html>
