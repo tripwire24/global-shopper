@@ -4,44 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Shopper</title>
-    
+
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#3B82F6">
-    <meta name="description" content="Currency Converter & Shopping Assistant">
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="description" content="Currency converter and shopping assistant">
     <link rel="manifest" href="manifest.json">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
-    
+    <!-- iOS PWA Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Global Shopper">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    
     <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-    
-    <!-- Babel -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
     <style>
+        /* Loading Spinner Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         .loading-spinner {
             animation: spin 1s linear infinite;
         }
         
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
+        /* Hide content before JavaScript loads */
         .js-loading {
             display: none;
         }
-        
         .js-ready .js-loading {
             display: block;
+        }
+        
+        /* PWA Install Banner */
+        .install-banner {
+            bottom: -100%;
+            transition: bottom 0.3s ease-in-out;
+        }
+        .install-banner.show {
+            bottom: 0;
         }
     </style>
 </head>
@@ -49,13 +57,29 @@
     <!-- Initial Loading Screen -->
     <div id="initial-loading" class="fixed inset-0 flex items-center justify-center bg-white z-50">
         <div class="text-center">
-            <div class="loading-spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+            <div class="loading-spinner w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto"></div>
             <p class="mt-4 text-gray-600">Loading Global Shopper...</p>
         </div>
     </div>
 
     <!-- Main App Root -->
-    <div id="root"></div>
+    <div id="root" class="flex-grow"></div>
+
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-banner fixed bottom-0 left-0 right-0 bg-indigo-600 text-white p-4 hidden">
+        <div class="max-w-md mx-auto flex items-center justify-between px-4">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold">Install App</h3>
+                <p class="text-sm opacity-90">Add to your home screen for quick access</p>
+            </div>
+            <div class="flex items-center gap-3 ml-4">
+                <button onclick="hideInstallPrompt()" class="text-sm opacity-90 hover:opacity-100">Not now</button>
+                <button onclick="installPWA()" class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-opacity-90">
+                    Install
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- JavaScript Required Notice -->
     <div id="no-js-warning" class="fixed inset-0 flex items-center justify-center bg-white">
@@ -78,27 +102,45 @@
                     });
             });
         }
-    </script>
 
-    <!-- Initialize Lucide Icons -->
-    <script>
-        lucide.createIcons();
-    </script>
-
-    <script>
-        // Remove no-js warning and show app when JavaScript is enabled
+        // Hide no-js warning when JavaScript is enabled
         document.getElementById('no-js-warning').style.display = 'none';
-        document.body.classList.add('js-ready');
-        
+
         // Remove loading screen once app is loaded
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('initial-loading').style.display = 'none';
             }, 1000);
         });
+
+        // PWA Install Prompt functions
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.remove('hidden');
+        });
+
+        function hideInstallPrompt() {
+            document.getElementById('installPrompt').classList.add('hidden');
+        }
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                hideInstallPrompt();
+            }
+        }
     </script>
 
-    <!-- Your app script -->
+    <!-- App Script -->
     <script type="text/babel" src="app.js"></script>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm text-gray-600 mt-8 pb-4">
+        © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
+    </footer>
 </body>
 </html>
