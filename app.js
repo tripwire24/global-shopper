@@ -748,6 +748,12 @@ return (
             </div>
         </div>
     );
+
 }
 
-export default GlobalShopper;
+ReactDOM.render(
+  <React.StrictMode>
+    <GlobalShopper />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
