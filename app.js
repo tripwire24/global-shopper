@@ -1,3 +1,5 @@
+const { useState, useEffect, useRef } = React;
+
 // Currency flag emoji mapping
 const CURRENCY_FLAGS = {
     USD: '🇺🇸',
