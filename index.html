@@ -7,7 +7,10 @@
     <meta name="description" content="Currency converter and shopping companion app">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
+
+    <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <!-- React and Babel -->
@@ -17,41 +20,6 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <style>
-        /* Custom styles */
-        .install-banner {
-            display: none;
-            background-color: #4F46E5;
-            color: white;
-        }
-        
-        .install-banner.show {
-            display: block;
-        }
-
-        /* Loading state */
-        .loading-overlay {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-        }
-
-        /* Transitions */
-        .fade-enter {
-            opacity: 0;
-        }
-        .fade-enter-active {
-            opacity: 1;
-            transition: opacity 200ms ease-in;
-        }
-        .fade-exit {
-            opacity: 1;
-        }
-        .fade-exit-active {
-            opacity: 0;
-            transition: opacity 200ms ease-in;
-        }
-    </style>
 </head>
 <body class="bg-gray-100">
     <div id="root" class="flex flex-col min-h-screen"></div>
@@ -72,7 +40,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="text-center text-sm text-gray-600 py-4">
         © 2024 Global Shopper™ | Developed by Tripwire Digital | All Rights Reserved
     </footer>
