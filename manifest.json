@@ -4,8 +4,8 @@
     "description": "Currency converter and shopping assistant for global shopping",
     "start_url": "./",
     "display": "standalone",
-    "background_color": "#F9FAFB",
-    "theme_color": "#4F46E5",
+    "background_color": "#3B82F6",
+    "theme_color": "#3B82F6",
     "icons": [
         {
             "src": "./icon-192.png",
@@ -18,9 +18,60 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
+        },
+        {
+            "src": "./favicon.png",
+            "sizes": "64x64",
+            "type": "image/png",
+            "purpose": "any"
         }
     ],
     "orientation": "portrait",
     "categories": ["shopping", "finance", "utilities"],
-    "prefer_related_applications": false
+    "prefer_related_applications": false,
+    "screenshots": [
+        {
+            "src": "./screenshot-1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide",
+            "label": "Currency Converter"
+        },
+        {
+            "src": "./screenshot-2.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide",
+            "label": "Shopping History"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "New Conversion",
+            "url": "/?action=new",
+            "description": "Start a new currency conversion",
+            "icons": [
+                {
+                    "src": "./icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "View History",
+            "url": "/?action=history",
+            "description": "View conversion history",
+            "icons": [
+                {
+                    "src": "./icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "lang": "en",
+    "dir": "ltr",
+    "display_override": ["standalone", "minimal-ui"],
+    "scope": "./",
+    "related_applications": []
 }
