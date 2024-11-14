@@ -2,17 +2,17 @@ const { useState, useEffect, useRef } = React;
 
 // Add currencies configuration
 const CURRENCIES = {
-  USD: { flag: '🇺🇸', symbol: '$', name: 'Dollar' },
-  EUR: { flag: '🇪🇺', symbol: '€', name: 'Euro' },
-  GBP: { flag: '🇬🇧', symbol: '£', name: 'Pound' },
-  JPY: { flag: '🇯🇵', symbol: '¥', name: 'Yen' },
-  AUD: { flag: '🇦🇺', symbol: 'A$', name: 'Dollar' },
-  CAD: { flag: '🇨🇦', symbol: 'C$', name: 'Dollar' },
-  CHF: { flag: '🇨🇭', symbol: 'Fr', name: 'Franc' },
-  CNY: { flag: '🇨🇳', symbol: '¥', name: 'Yuan' },
-  HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Dollar' },
-  NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'Dollar' },
-  PHP: { flag: '🇵🇭', symbol: '₱', name: 'Peso' }
+    USD: { flag: '🇺🇸', symbol: '$', name: 'US Dollar' },
+    EUR: { flag: '🇪🇺', symbol: '€', name: 'Euro' },
+    GBP: { flag: '🇬🇧', symbol: '£', name: 'British Pound' },
+    JPY: { flag: '🇯🇵', symbol: '¥', name: 'Japanese Yen' },
+    AUD: { flag: '🇦🇺', symbol: 'A$', name: 'Australian Dollar' },
+    CAD: { flag: '🇨🇦', symbol: 'C$', name: 'Canadian Dollar' },
+    CHF: { flag: '🇨🇭', symbol: 'Fr', name: 'Swiss Franc' },
+    CNY: { flag: '🇨🇳', symbol: '¥', name: 'Chinese Yuan' },
+    HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Hong Kong Dollar' },
+    NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'New Zealand Dollar' },
+    PHP: { flag: '🇵🇭', symbol: '₱', name: 'Philippine Peso' }
 };
 
 function CurrencyConverter() {
@@ -315,7 +315,7 @@ return (
                                 >
                                     {Object.entries(CURRENCIES).map(([code, { flag, name }]) => (
                                         <option key={code} value={code}>
-                                            {flag} {code}
+                                            {flag} {code} - {name}
                                         </option>
                                     ))}
                                 </select>
@@ -325,6 +325,33 @@ return (
                                     onChange={handleFromAmountChange}
                                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm"
                                     placeholder={`Enter amount in ${fromCurrency}`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* To Currency Input */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                To Currency
+                            </label>
+                            <div className="flex space-x-2">
+                                <select
+                                    value={toCurrency}
+                                    onChange={(e) => handleCurrencyChange('to', e.target.value)}
+                                    className="w-1/3 px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
+                                >
+                                    {Object.entries(CURRENCIES).map(([code, { flag, name }]) => (
+                                        <option key={code} value={code}>
+                                            {flag} {code} - {name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="text"
+                                    value={toAmount}
+                                    readOnly
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
+                                    placeholder={`Amount in ${toCurrency}`}
                                 />
                             </div>
                         </div>
