@@ -286,7 +286,7 @@ return (
             {/* Main converter card */}
             <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-indigo-600 px-6 py-4">
-                    <h1 className="text-2xl font-bold text-white text-center">Currency Converter</h1>
+                    <h1 className="text-2xl font-bold text-white text-center">Global Shopper Assistant</h1>
                     {lastUpdated && rates && (
                         <p className="text-indigo-100 text-sm text-center mt-1">
                             Rate: 1 {fromCurrency} = {convertCurrency(1, fromCurrency, toCurrency)} {toCurrency} (Updated: {lastUpdated})
