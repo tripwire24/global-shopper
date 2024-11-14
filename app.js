@@ -13,7 +13,7 @@ const CURRENCIES = {
     HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Hong Kong Dollar' },
     NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'New Zealand Dollar' },
     PHP: { flag: '🇵🇭', symbol: '₱', name: 'Philippine Peso' },
-    THB: { flag: 'TH', symbol: '฿', name: 'Thai Baht' },
+    THB: { flag: 'TH', symbol: '฿', name: 'Thai Baht' }
 };
 
 function CurrencyConverter() {
