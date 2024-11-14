@@ -4,7 +4,7 @@
     "description": "Currency converter and shopping assistant for global shopping",
     "start_url": "./",
     "display": "standalone",
-    "background_color": "#3B82F6",
+    "background_color": "#cb6ce6",
     "theme_color": "#cb6ce6",
     "icons": [
         {
