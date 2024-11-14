@@ -20,7 +20,7 @@ function CurrencyConverter() {
     const [fromAmount, setFromAmount] = useState('');
     const [toAmount, setToAmount] = useState('');
     const [fromCurrency, setFromCurrency] = useState('USD');
-    const [toCurrency, setToCurrency] = useState('EUR');
+    const [toCurrency, setToCurrency] = useState('NZD');
     const [rates, setRates] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
