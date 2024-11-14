@@ -2,17 +2,17 @@ const { useState, useEffect, useRef } = React;
 
 // Add currencies configuration
 const CURRENCIES = {
-    USD: { flag: '🇺🇸', symbol: '$', name: 'Dollar' },
-    EUR: { flag: '🇪🇺', symbol: '€', name: 'Euro' },
-    GBP: { flag: '🇬🇧', symbol: '£', name: 'Pound' },
-    JPY: { flag: '🇯🇵', symbol: '¥', name: 'Yen' },
-    AUD: { flag: '🇦🇺', symbol: 'A$', name: 'Dollar' },
-    CAD: { flag: '🇨🇦', symbol: 'C$', name: 'Dollar' },
-    CHF: { flag: '🇨🇭', symbol: 'Fr', name: 'Franc' },
-    CNY: { flag: '🇨🇳', symbol: '¥', name: 'Yuan' },
-    HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Dollar' },
-    NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'Dollar' },
-    PHP: { flag: '🇵🇭', symbol: '₱', name: 'Peso' }
+  USD: { flag: '🇺🇸', symbol: '$', name: 'Dollar' },
+  EUR: { flag: '🇪🇺', symbol: '€', name: 'Euro' },
+  GBP: { flag: '🇬🇧', symbol: '£', name: 'Pound' },
+  JPY: { flag: '🇯🇵', symbol: '¥', name: 'Yen' },
+  AUD: { flag: '🇦🇺', symbol: 'A$', name: 'Dollar' },
+  CAD: { flag: '🇨🇦', symbol: 'C$', name: 'Dollar' },
+  CHF: { flag: '🇨🇭', symbol: 'Fr', name: 'Franc' },
+  CNY: { flag: '🇨🇳', symbol: '¥', name: 'Yuan' },
+  HKD: { flag: '🇭🇰', symbol: 'HK$', name: 'Dollar' },
+  NZD: { flag: '🇳🇿', symbol: 'NZ$', name: 'Dollar' },
+  PHP: { flag: '🇵🇭', symbol: '₱', name: 'Peso' }
 };
 
 function CurrencyConverter() {
