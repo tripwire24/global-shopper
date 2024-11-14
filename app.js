@@ -356,34 +356,7 @@ return (
                             </div>
                         </div>
 
-                        {/* To Currency Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                To Currency
-                            </label>
-                            <div className="flex space-x-2">
-                                <select
-                                    value={toCurrency}
-                                    onChange={(e) => handleCurrencyChange('to', e.target.value)}
-                                    className="w-1/3 px-3 py-2 border border-gray-300 rounded-lg shadow-sm"
-                                >
-                                    {Object.entries(CURRENCIES).map(([code, { flag, name }]) => (
-                                        <option key={code} value={code}>
-                                            {flag} {code}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    type="text"
-                                    value={toAmount}
-                                    readOnly
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50"
-                                    placeholder={`Amount in ${toCurrency}`}
-                                />
-                            </div>
-                        </div>
-
-                        <button
+                                    <button
                             onClick={saveAndReset}
                             disabled={!fromAmount || !toAmount}
                             className={`w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed`}
